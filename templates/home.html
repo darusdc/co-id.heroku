@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+ {% block content %}
+ <div class='row'>
+     <div class="col-md-12">
+         <div class="card">
+             <div class="card-header mb-5">
+                 <h5 class="card-category">rumah di melbourne</h5>
+                 <h3 class="card-title">Cari rumah idaman di Melbourne, Australia</h3>
+             </div>
+         <div class="card-body">
+            {% for post in posts %}
+            <div class="typography-line">
+                <h1><span>{{post.title}}</span></h1>
+                <p>By {{post.author}} on {{post.date_posted}}</p>
+                <p>{{post.content}}</p>
+            </div>
+            {% endfor %}
+         </div>
+        </div>
+     </div>
+ </div>
+ {% endblock content %}

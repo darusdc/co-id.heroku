@@ -1,0 +1,48 @@
+ {% extends "layout.html" %}
+ {% block content %}
+ <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script> -->
+ <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.js"></script>
+ <div class='row'>
+     <div class="col-md-12">
+        <div class="card">
+            <div class="card-header mb-5">
+                 <h5 class="card-category">By Province in Indonesia</h5>
+                 <h3 class="card-title">Data covid</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="barPlot" width="200" height="100"></canvas>
+                <label>Source: Wikipedia Covid Indonesia ({{update}})</label>
+                <script>
+                    var ctx=document.getElementById('barPlot');
+                    var barPlot= new Chart(ctx, {
+                        type: 'horizontalBar',
+                        data: {
+                            labels: [{%for i in prov%} '{{i}}',{%endfor%}],
+                            datasets: [{
+                                label:' # Active cases',
+                                data: {{jum}},
+                                backgroundColor: [{%for i in col%} '{{i}}', {%endfor%}],borderWidth:1
+                            }]
+                        },
+                        options:{
+                            elements: {
+                            rectangle: {
+                                borderWidth: 2,
+                            }
+                        },
+                        responsive: true,
+                        legend: {
+                            position: 'right',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Rank of Active Cases by Province'
+                        }
+                    }
+                    }
+                    )
+                </script>
+            </div>
+        </div>
+    </div>
+ {% endblock content %}
