@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class='row'>
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header mb-5">
+                <h5 class="card-category">Average of New Cases</h5>
+                <h3 id='judul' class="card-title">Indonesia</h3>
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <label class="input-group-text" for="negara">Select Country :</label>
+                </div>
+                <select class="select" id="negara" name="negara">
+                    {% for negara in country %}
+                    {% if negara=='Indonesia'%}
+                    <option value="{{negara}}" selected>{{negara}}</button>
+                    {%else%}
+                    <option value="{{negara}}">{{negara}}</button>
+                    {%endif%}
+                        {% endfor%}
+                </select>
+            </div>
+            <div class="card-body">
+                <canvas id="linePlot"></canvas>
+                <label>SOURCE: World Health Organization ({{update}})</label>
+                <script>
+                    var ctx=document.getElementById('linePlot');
+                    var linePlot= new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [{%for i in month%} '{{i}}',{%endfor%}],
+                            datasets: [{
+                                label: 'New Deaths',
+                                data: {{deaths}},
+                                backgroundColor: '#fc0703',fill: true
+                            }, {
+                                label: 'New Cases',
+                                data: {{cases}},
+                                backgroundColor: '#fcd303',fill: true
+                            }]
+                        },
+                        options:{
+                            responsive: true,
+                            tooltips: {mode: 'index',intersect: false,},
+                            hover: {mode:'nearest',intersect:true},
+                            scales:{
+                                xAxes: [{
+                                    scaleLabel:{
+                                        display:true,
+                                        labelString:'Month'
+                                    }
+                                }],
+                                yAxes:[{
+                                    display: true,
+                                    scaleLabel:{
+                                        display: true,
+                                        labelString:'# Cases'
+                                    }
+                                }]
+                            }
+                        }
+                    });
+                    var data_base= {
+                    {%for i in country%}
+                    "{{i}}" : {
+                        data_m: [{%for y in data.get_group(i).resample('M').mean()['New_deaths']%} {{y|round}},{%endfor%}],
+                        data_h:[{%for v in data.get_group(i).resample('M').mean()['New_cases']%} {{v|round}},{%endfor%}]
+                    },
+                    {%endfor%}
+                    };
+                    document.getElementById('negara').onchange= function(){
+                        var plot=linePlot.config.data;
+                        var neg=document.getElementById('negara').value;
+                        plot.datasets[0].data=data_base[neg]['data_m'];
+                        plot.datasets[1].data=data_base[neg]['data_h'];
+                        document.getElementById('judul').innerHTML=neg;
+                        linePlot.update()
+                    };
+                </script>
+            </div>
+       </div>
+    </div>
+</div>
+{% endblock content %}
