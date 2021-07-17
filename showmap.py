@@ -14,8 +14,10 @@ def data_bulanan():
     last_up=last_update.find_all('h2')[1].find_all('span')[1].text
     # last_up=last.split(': ')[1].split(',')
     # last_up=' '.join(last_up)
+
     with open('bulanan_last','r') as baca:
         data_offline=baca.read()
+    
     if last_up==data_offline :
         data=pd.read_csv('offline_bulanan.csv')
         data['Date_reported']=data['Date_reported'].apply(pd.to_datetime)
@@ -25,18 +27,6 @@ def data_bulanan():
         nat_group=data.groupby('Country')
     else:
         urllib.request.urlretrieve('https://covid19.who.int/WHO-COVID-19-global-data.csv','offline_bulanan.csv')
-        # list_data=str(data.content).split('\\n')
-        # list_data.remove(list_data[0])
-        # list_data.remove(list_data[-1])
-        # for i in range(len(list_data)):
-        #     if len(list_data[i].split(','))==9:
-        #         wew=list_data[i].split('"')
-        #         wew=wew[0].split(',')+[wew[1]]+wew[2].split(',')
-        #         wew.remove('')
-        #         wew.remove('')
-        #         list_data[i]=wew
-        #     else:
-        #         list_data[i]=list_data[i].split(',')
         data_covid=pd.read_csv('offline_bulanan.csv')
         data_covid['Date_reported']=data_covid['Date_reported'].apply(pd.to_datetime)
         data_covid[['New_cases','Cumulative_cases','New_deaths','Cumulative_deaths']] = data_covid[['New_cases','Cumulative_cases','New_deaths','Cumulative_deaths']].apply(pd.to_numeric)
@@ -45,6 +35,64 @@ def data_bulanan():
         nat_group=data_covid.groupby('Country')
         with open('bulanan_last','w') as buka:
             buka.write(last_up)
+    Country_JS=dict()
+    for i in list(nat_group.groups):
+        Country_JS[i]= {
+            'data_m': [round(x) for x in nat_group.get_group(i).resample('M').mean()['New_deaths']],
+            'data_h': [round(x) for x in nat_group.get_group(i).resample('M').mean()['New_cases']]
+        }
+    month = nat_group.get_group('Indonesia').resample('M').mean().index.month_name()
+    cases = [round(x)  for x in nat_group.get_group('Indonesia').resample('M').mean()['New_cases']]
+    death = [round(x)  for x in nat_group.get_group('Indonesia').resample('M').mean()['New_deaths']]
+    with open('./static/assets/js/data.js','w') as js:
+        js.write("\
+    var ctx = document.getElementById('linePlot');\n\
+    var linePlot= new Chart(ctx, {\n\
+        type: 'line',\n\
+        data: {\n\
+            labels: ["+", ".join([f'"{i}"' for i in month])+"],\n\
+            datasets: [{\n\
+                label: 'New Deaths',\n\
+                data: "+ str(death) +" ,\n\
+                backgroundColor: '#fc0703',fill: true\n\
+            }, {\n\
+                label: 'New Cases',\n\
+                data: "+ str(cases) +" ,\n\
+                backgroundColor: '#fcd303',fill: true\n\
+            }]\n\
+        },\n\
+        options:{\n\
+            responsive: true,\n\
+            tooltips: {mode: 'index',intersect: false,},\n\
+            hover: {mode:'nearest',intersect:true},\n\
+            scales:{\n\
+                xAxes: [{\n\
+                    scaleLabel:{\n\
+                        display:true,\n\
+                        labelString:'Month'\n\
+                    }\n\
+                }],\n\
+                yAxes:[{\n\
+                    display: true,\n\
+                    scaleLabel:{\n\
+                        display: true,\n\
+                        labelString:'# Cases'\n\
+                    }\n\
+                }]\n\
+            }\n\
+        }\n\
+    });\n\
+    var data_base= \
+    " + str(Country_JS) + ";\n\
+    document.getElementById('negara').onchange = function(){\n\
+        var plot = linePlot.config.data;\n\
+        var neg = document.getElementById('negara').value;\n\
+        plot.datasets[0].data=data_base[neg]['data_m'];\n\
+        plot.datasets[1].data=data_base[neg]['data_h'];\n\
+        document.getElementById('judul').innerHTML=neg;\n\
+        linePlot.update()\n\
+    };"
+        )
     return nat_group, last_up
 def update_data():
     long_lat=requests.get('https://raw.githubusercontent.com/darusdc/Mapping/master/gps_indonesia.json').json()
@@ -57,7 +105,7 @@ def update_data():
     with open('wikipedia_update','r') as last_update:
         dataoffline=last_update.read()
     if rows[-1].find('i').string == dataoffline :
-        return rows[-1].find('i').string
+        Data_Col_row=pd.DataFrame(Data_Col_row)
     else:
         for i in columns:
             if i.string!=None:
@@ -95,7 +143,40 @@ def update_data():
         Data_Col_row.to_csv('static/data_covid.csv')
         with open('wikipedia_update','w') as last_update:
             last_update.write(rows[-1].find('i').text.replace('[1]',''))
-        return rows[-1].find('i').text.replace('[1]','')
+    province = list(Data_Col_row.sort_values('active',ascending=False)['Province'])
+    jum = list(Data_Col_row.sort_values('active',ascending=False)['active'])
+    colors=[color() for x in range(34)]
+    with open('./static/assets/js/data_indo.js', 'w') as js:
+            js.write("var ctx=document.getElementById('barPlot');\n\
+                    var barPlot= new Chart(ctx, {\n\
+                        type: 'horizontalBar',\n\
+                        data: {\n\
+                            labels: "+ str(province) +",\n\
+                            datasets: [{\n\
+                                label:' # Active cases',\n\
+                                data: "+ str(jum) +",\n\
+                                backgroundColor: "+ str(colors) +",\n\
+                                borderWidth:1\n\
+                            }]\n\
+                        },\n\
+                        options:{\n\
+                            elements: {\n\
+                            rectangle: {\n\
+                                borderWidth: 2,\n\
+                            }\n\
+                        },\n\
+                        responsive: true,\n\
+                        legend: {\n\
+                            position: 'right',\n\
+                        },\n\
+                        title: {\n\
+                            display: true,\n\
+                            text: 'Rank of Active Cases by Province'\n\
+                        }\n\
+                    }\n\
+                    }\n\
+                    )")
+    return rows[-1].find('i').text.replace('[1]','')
 def get_table():
     Data_Col_row=pd.read_csv('static/data_covid.csv').sort_values('active',ascending=False).reset_index()
     xax=[]

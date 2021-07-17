@@ -10,36 +10,6 @@
             <div class="card-body">
                 <canvas id="barPlot" width="200" height="100"></canvas>
                 <label>Source: Wikipedia Covid Indonesia ({{update}})</label>
-                <script>
-                    var ctx=document.getElementById('barPlot');
-                    var barPlot= new Chart(ctx, {
-                        type: 'horizontalBar',
-                        data: {
-                            labels: [{%for i in prov%} '{{i}}',{%endfor%}],
-                            datasets: [{
-                                label:' # Active cases',
-                                data: {{jum}},
-                                backgroundColor: [{%for i in col%} '{{i}}', {%endfor%}],borderWidth:1
-                            }]
-                        },
-                        options:{
-                            elements: {
-                            rectangle: {
-                                borderWidth: 2,
-                            }
-                        },
-                        responsive: true,
-                        legend: {
-                            position: 'right',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Rank of Active Cases by Province'
-                        }
-                    }
-                    }
-                    )
-                </script>
             </div>
         </div>
     </div>

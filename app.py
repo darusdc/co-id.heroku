@@ -9,14 +9,11 @@ app=Flask(__name__)
 app.config['SECRET_KEY']='eb548ce03fbe2e738e916a3497aa6024'
 kb,update=showmap.data_bulanan()
 update=showmap.update_data()
-prov=showmap.get_table()
-jum=showmap.get_data()
 
 #Routing
 @app.route('/')
 def index():
-    colors=[showmap.color() for x in range(34)]
-    return render_template('index.html', update=update,active='Dashboard',prov=prov,jum=jum,col=colors)
+    return render_template('index.html', update=update,active='Dashboard')
 
 @app.route('/about')
 def about():
@@ -33,10 +30,10 @@ def covid2():
 @app.route('/kasus_baru')
 def new_cases():
     negara=list(kb.groups)
-    month=list(kb.get_group('Indonesia').resample('M').mean().index.month_name())
-    cases=list(round(kb.get_group('Indonesia').resample('M').mean()['New_cases']))
-    death=list(round(kb.get_group('Indonesia').resample('M').mean()['New_deaths']))
-    return render_template('kasus.html',update=update,active='Bulanan',data=kb,deaths=death,country=negara,month=month,cases=cases,col=[showmap.color() for x in range(5)])
+    # month=list(kb.get_group('Indonesia').resample('M').mean().index.month_name())
+    # cases=list(round(kb.get_group('Indonesia').resample('M').mean()['New_cases']))
+    # death=list(round(kb.get_group('Indonesia').resample('M').mean()['New_deaths']))
+    return render_template('kasus.html',update=update, active='Bulanan', country=negara ,col=[showmap.color() for x in range(5)])
 
 if __name__== "__main__":
-    app.run()
+    app.run(debug=True)
