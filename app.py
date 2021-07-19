@@ -29,11 +29,11 @@ def covid2():
  
 @app.route('/kasus_baru')
 def new_cases():
-    negara=list(kb.groups)
+    # negara=list(kb.groups)
     # month=list(kb.get_group('Indonesia').resample('M').mean().index.month_name())
     # cases=list(round(kb.get_group('Indonesia').resample('M').mean()['New_cases']))
     # death=list(round(kb.get_group('Indonesia').resample('M').mean()['New_deaths']))
-    return render_template('kasus.html',update=update, active='Bulanan', country=negara ,col=[showmap.color() for x in range(5)])
+    return render_template('kasus.html',update=update, active='Bulanan' ,col=[showmap.color() for x in range(5)])
 
 if __name__== "__main__":
     app.run(debug=True)

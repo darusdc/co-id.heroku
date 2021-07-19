@@ -46,54 +46,54 @@ def data_bulanan():
     death = [round(x)  for x in nat_group.get_group('Indonesia').resample('M').mean()['New_deaths']]
     with open('./static/assets/js/data.js','w') as js:
         js.write("\
-    var ctx = document.getElementById('linePlot');\n\
-    var linePlot= new Chart(ctx, {\n\
-        type: 'line',\n\
-        data: {\n\
-            labels: ["+", ".join([f'"{i}"' for i in month])+"],\n\
-            datasets: [{\n\
-                label: 'New Deaths',\n\
-                data: "+ str(death) +" ,\n\
-                backgroundColor: '#fc0703',fill: true\n\
-            }, {\n\
-                label: 'New Cases',\n\
-                data: "+ str(cases) +" ,\n\
-                backgroundColor: '#fcd303',fill: true\n\
-            }]\n\
-        },\n\
-        options:{\n\
-            responsive: true,\n\
-            tooltips: {mode: 'index',intersect: false,},\n\
-            hover: {mode:'nearest',intersect:true},\n\
-            scales:{\n\
-                xAxes: [{\n\
-                    scaleLabel:{\n\
-                        display:true,\n\
-                        labelString:'Month'\n\
+            var ctx = document.getElementById('linePlot');\n\
+            var linePlot= new Chart(ctx, {\n\
+                type: 'line',\n\
+                data: {\n\
+                    labels: ["+", ".join([f'"{i}"' for i in month])+"],\n\
+                    datasets: [{\n\
+                        label: 'New Deaths',\n\
+                        data: "+ str(death) +" ,\n\
+                        backgroundColor: '#fc0703',fill: true\n\
+                    }, {\n\
+                        label: 'New Cases',\n\
+                        data: "+ str(cases) +" ,\n\
+                        backgroundColor: '#fcd303',fill: true\n\
+                    }]\n\
+                },\n\
+                options:{\n\
+                    responsive: true,\n\
+                    tooltips: {mode: 'index',intersect: false,},\n\
+                    hover: {mode:'nearest',intersect:true},\n\
+                    scales:{\n\
+                        xAxes: [{\n\
+                            scaleLabel:{\n\
+                                display:true,\n\
+                                labelString:'Month'\n\
+                            }\n\
+                        }],\n\
+                        yAxes:[{\n\
+                            display: true,\n\
+                            scaleLabel:{\n\
+                                display: true,\n\
+                                labelString:'# Cases'\n\
+                            }\n\
+                        }]\n\
                     }\n\
-                }],\n\
-                yAxes:[{\n\
-                    display: true,\n\
-                    scaleLabel:{\n\
-                        display: true,\n\
-                        labelString:'# Cases'\n\
-                    }\n\
-                }]\n\
-            }\n\
-        }\n\
-    });\n\
-    var data_base= \
-    " + str(Country_JS) + ";\n\
-    document.getElementById('negara').onchange = function(){\n\
-        var plot = linePlot.config.data;\n\
-        var neg = document.getElementById('negara').value;\n\
-        plot.datasets[0].data=data_base[neg]['data_m'];\n\
-        plot.datasets[1].data=data_base[neg]['data_h'];\n\
-        document.getElementById('judul').innerHTML=neg;\n\
-        linePlot.update()\n\
-    };"
-        )
-    return nat_group, last_up
+                }\n\
+            });\n\
+            var data_base= \
+            " + str(Country_JS) + ";\n\
+            document.getElementById('negara').onchange = function(){\n\
+                var plot = linePlot.config.data;\n\
+                var neg = document.getElementById('negara').value;\n\
+                plot.datasets[0].data=data_base[neg]['data_m'];\n\
+                plot.datasets[1].data=data_base[neg]['data_h'];\n\
+                document.getElementById('judul').innerHTML=neg;\n\
+                linePlot.update()\n\
+            };"
+                )
+    return list(nat_group.groups), last_up
 def update_data():
     long_lat=requests.get('https://raw.githubusercontent.com/darusdc/Mapping/master/gps_indonesia.json').json()
     r=requests.get('https://en.wikipedia.org/wiki/Statistics_of_the_COVID-19_pandemic_in_Indonesia#Cases_by_province_and_region')
@@ -146,36 +146,57 @@ def update_data():
     province = list(Data_Col_row.sort_values('active',ascending=False)['Province'])
     jum = list(Data_Col_row.sort_values('active',ascending=False)['active'])
     colors=[color() for x in range(34)]
-    with open('./static/assets/js/data_indo.js', 'w') as js:
-            js.write("var ctx=document.getElementById('barPlot');\n\
-                    var barPlot= new Chart(ctx, {\n\
-                        type: 'horizontalBar',\n\
-                        data: {\n\
-                            labels: "+ str(province) +",\n\
-                            datasets: [{\n\
-                                label:' # Active cases',\n\
-                                data: "+ str(jum) +",\n\
-                                backgroundColor: "+ str(colors) +",\n\
-                                borderWidth:1\n\
-                            }]\n\
-                        },\n\
-                        options:{\n\
-                            elements: {\n\
-                            rectangle: {\n\
-                                borderWidth: 2,\n\
-                            }\n\
-                        },\n\
-                        responsive: true,\n\
-                        legend: {\n\
-                            position: 'right',\n\
-                        },\n\
-                        title: {\n\
-                            display: true,\n\
-                            text: 'Rank of Active Cases by Province'\n\
-                        }\n\
-                    }\n\
-                    }\n\
-                    )")
+    with open('./static/assets/js/data_indo.js','w') as js:
+        js.write("\
+        var ctx=document.getElementById('barPlot');\
+        var dtx=document.getElementById('vbarPlot');\
+        var etx=document.getElementById('piePlot');\
+        var source = {\
+                            labels: "+ str(province) +",\
+                            datasets: [{\
+                                label:' # Active cases',\
+                                data: "+ str(jum) +",\
+                                backgroundColor: "+ str(colors) +",\
+                                borderWidth:1\
+                            }]\
+                        }\
+        var option={\
+                        animation: {\
+                        onComplete: () => {\
+                        delayed = true;\
+                    },\
+                    delay: (context) => {\
+                        let delay = 0;\
+                        if (context.type === 'data' && context.mode === 'default' && !delayed) {\
+                            delay = context.dataIndex * 300 + context.datasetIndex * 100;\
+                        }\
+                    return delay;\
+                    },\
+                    },\
+                    responsive: true,\
+                    legend: {\
+                        position: 'right',\
+                    },\
+                    title: {\
+                        display: true,\
+                        text: 'Rank of Active Cases by Province'\
+                    }\
+                };\
+                    var barPlot= new Chart(ctx, {\
+                        type: 'horizontalBar',\
+                        data: source,\
+                        options: option\
+                    });\
+                    var vbarPlot= new Chart(dtx, {\
+                        type: 'bar',\
+                        data: source,\
+                        options: option\
+                    });\
+                    var piePlot= new Chart(etx, {\
+                        type: 'pie',\
+                        data: source,\
+                        options: option\
+                    });    ")
     return rows[-1].find('i').text.replace('[1]','')
 def get_table():
     Data_Col_row=pd.read_csv('static/data_covid.csv').sort_values('active',ascending=False).reset_index()

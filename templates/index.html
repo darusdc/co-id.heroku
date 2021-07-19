@@ -7,10 +7,39 @@
                  <h5 class="card-category">By Province in Indonesia</h5>
                  <h3 class="card-title">Data covid</h3>
             </div>
-            <div class="card-body">
-                <canvas id="barPlot" width="200" height="100"></canvas>
-                <label>Source: Wikipedia Covid Indonesia ({{update}})</label>
+            <h6>Chart Type:</h6>
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+              <li class="nav-item">
+                <a class="nav-link active" id="pills-horizontal-tab" data-toggle="pill" href="#pills-horizontal" role="tab" aria-controls="pills-horizontal" aria-selected="true">Horizontal</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="pills-vertical-tab" data-toggle="pill" href="#pills-vertical" role="tab" aria-controls="pills-vertical" aria-selected="false">Vertical</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="pills-pie-tab" data-toggle="pill" href="#pills-pie" role="tab" aria-controls="pills-pie" aria-selected="false">Pie</a>
+              </li>
+            </ul>
+            <div class="tab-content" id="pills-tabContent">
+              <div class="tab-pane fade show active" id="pills-horizontal" role="tabpanel" aria-labelledby="pills-horizontal-tab">
+                <div class="card-body">
+                  <canvas id="barPlot" width="200" height="100"></canvas>
+                  <label>Source: Wikipedia Covid Indonesia ({{update}})</label>
+                </div>
+              </div>
+              <div class="tab-pane fade" id="pills-vertical" role="tabpanel" aria-labelledby="pills-vertical-tab">
+                <div class="card-body">
+                  <canvas id="vbarPlot" width="200" height="100"></canvas>
+                  <label>Source: Wikipedia Covid Indonesia ({{update}})</label>
+                </div>
+              </div>
+              <div class="tab-pane fade" id="pills-pie" role="tabpanel" aria-labelledby="pills-pie-tab">
+                <div class="card-body">
+                  <canvas id="piePlot" width="200" height="100"></canvas>
+                  <label>Source: Wikipedia Covid Indonesia ({{update}})</label>
+                </div>
+              </div>
             </div>
         </div>
     </div>
+</div>
  {% endblock content %}
