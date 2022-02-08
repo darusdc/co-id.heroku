@@ -1,3 +1,4 @@
+# Import Library
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -7,14 +8,18 @@ import requests
 import re
 import random
 import urllib
+
+# Function to load data
 def data_bulanan():
-    #Load and Processing Data
+
+    #Load and Processing Data from WHO
     last_update=requests.get('https://covid19.who.int/')
     last_update = BeautifulSoup(last_update.content,'html.parser')
     last_up=last_update.find_all('h2')[1].find_all('span')[1].text
     # last_up=last.split(': ')[1].split(',')
     # last_up=' '.join(last_up)
 
+    # Check if data is newest
     with open('bulanan_last','r') as baca:
         data_offline=baca.read()
     
@@ -25,6 +30,7 @@ def data_bulanan():
         data.set_index('Date_reported',inplace=True)
         # data.drop('Unnamed 1:',axis =1,inplace=True)
         nat_group=data.groupby('Country')
+    # Load data if there is new database
     else:
         urllib.request.urlretrieve('https://covid19.who.int/WHO-COVID-19-global-data.csv','offline_bulanan.csv')
         data_covid=pd.read_csv('offline_bulanan.csv')
@@ -36,6 +42,8 @@ def data_bulanan():
         with open('bulanan_last','w') as buka:
             buka.write(last_up)
     Country_JS=dict()
+    
+    # Change format data to JSON
     for i in list(nat_group.groups):
         Country_JS[i]= {
             'data_m': [round(x) for x in nat_group.get_group(i).resample('M').mean()['New_deaths']],
@@ -44,6 +52,8 @@ def data_bulanan():
     month = nat_group.get_group('Indonesia').resample('M').mean().index.month_name()
     cases = [round(x)  for x in nat_group.get_group('Indonesia').resample('M').mean()['New_cases']]
     death = [round(x)  for x in nat_group.get_group('Indonesia').resample('M').mean()['New_deaths']]
+    
+    # Write it to data.js for accessible data
     with open('./static/assets/js/data.js','w') as js:
         js.write("\
             var ctx = document.getElementById('linePlot');\n\
@@ -94,19 +104,26 @@ def data_bulanan():
             };"
                 )
     return list(nat_group.groups), last_up
+
+#Load Data from wikipedia
 def update_data():
+    # Request for new update data
     long_lat=requests.get('https://raw.githubusercontent.com/darusdc/Mapping/master/gps_indonesia.json').json()
     r=requests.get('https://en.wikipedia.org/wiki/Statistics_of_the_COVID-19_pandemic_in_Indonesia#Cases_by_province_and_region')
     soup=BeautifulSoup(r.content, 'html.parser')
     dataTarget=soup.find_all('table')
-    columns=dataTarget[1].find_all('th')
-    rows=dataTarget[1].find('tbody').find_all('tr')
+    columns=dataTarget[0].find_all('th')
+    rows=dataTarget[0].find('tbody').find_all('tr')
     col_list=['img']
+    
+    #Check if there any newest data
     with open('wikipedia_update','r') as last_update:
         dataoffline=last_update.read()
+    #if no new data, so the data will be drag from offline data
     if rows[-1].find('i').string == dataoffline :
-        Data_Col_row=pd.DataFrame(Data_Col_row)
+        Data_Col_row = pd.read_csv("static/data_covid.csv")
     else:
+    # New data grabbed
         for i in columns:
             if i.string!=None:
                 if '\n' in i.string:
@@ -140,12 +157,15 @@ def update_data():
                 'long':x[7],
                 })
         Data_Col_row=pd.DataFrame(Data_Col_row)
+        # Write to new offline data
         Data_Col_row.to_csv('static/data_covid.csv')
         with open('wikipedia_update','w') as last_update:
             last_update.write(rows[-1].find('i').text.replace('[1]',''))
     province = list(Data_Col_row.sort_values('active',ascending=False)['Province'])
     jum = list(Data_Col_row.sort_values('active',ascending=False)['active'])
     colors=[color() for x in range(34)]
+
+    # Write new data to javascript for accessibility
     with open('./static/assets/js/data_indo.js','w') as js:
         js.write("\
         var ctx=document.getElementById('barPlot');\
@@ -159,7 +179,7 @@ def update_data():
                                 backgroundColor: "+ str(colors) +",\
                                 borderWidth:1\
                             }]\
-                        }\
+                        };\
         var option={\
                         animation: {\
                         onComplete: () => {\
@@ -213,6 +233,7 @@ def image():
     Data_Col_row=pd.read_csv('static/data_covid.csv')
     sns.barplot(Data_Col_row['Province'],Data_Col_row['Confirmed'])
     plt.savefig('static/covid.png')
+# Map Generator
 def show_map():
     ind_state=requests.get('https://raw.githubusercontent.com/darusdc/Mapping/master/indonesia-en.geojson').json()
     Data_Col_row=pd.read_csv('static/data_covid.csv')
