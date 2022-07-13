@@ -35,4 +35,4 @@ def new_cases():
     return render_template('kasus.html',update=update, active='Bulanan',country = kb ,col=[showmap.color() for x in range(5)])
 
 if __name__== "__main__":
-    app.run(debug=True)
+    app.run()
