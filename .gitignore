@@ -3,4 +3,5 @@ Lib/
 Scripts/
 __pycache__/
 pyvenv.cfg
+env/
 
